@@ -1,55 +1,48 @@
-
+const Producto = require('../models/productos')
 
 class Productos {
     constructor() {
-        this.producto = [];
-        this.crearTabla();
+
     }
 
-    async crearTabla() {
+    async listar() {
         try {
-            console.log('Borrando tabla existente...');
-            
-            
-            await knex.schema.createTable('productos', table => {
-                table.string('title');
-                table.integer('price');
-                table.string('thumbnail');
-                table.integer('id');
-            });
-            console.log('Tabla productos creada!');
+            return Producto.find();
         } catch (error) {
-            console.log(error);
+            throw error;
         }
     }
 
-    listar() {
-        
-        return this.producto;
-    }
-
-    async guardar(productos) {
+    async listarPorId(id) {
         try {
-            
+            return Producto.findById();
+        } catch (error) {
+            throw error;
         }
-        catch (error) {
-            console.log(error);
-        }
-
-        this.producto.push(productos);
     }
 
-    actualizar(idProducto, nuevoProducto) {
-        this.producto[idProducto] = nuevoProducto;
-       
-            
+    async guardar(nuevoProducto) {
+        try {
+            return Producto.create(nuevoProducto)
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async actualizar(idProducto, nuevoProducto) {
+        try {
+            return Producto.findByIdAndUpdate(idProducto, nuevoProducto)
+        } catch (error) {
+            throw error;
+        }
     }
 
     borrar(idProducto) {
-        console.log(idProducto)
-        
-        let productoBorrado = this.producto.splice(idProducto, 1);
-        return productoBorrado;
+        try {
+            return Producto.findByIdAndDelete(idProducto);
+        } catch (error) {
+            throw error;
+        }
     }
 }
 

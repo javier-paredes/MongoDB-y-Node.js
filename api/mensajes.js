@@ -3,30 +3,44 @@ const Mensaje = require('../models/mensajes')
 class Mensajes {
 
     constructor() {
-        this.crearEntidad()
+
     }
 
-    async crearEntidad(primerMensaje) {
+    async devolver() {
         try {
-            return Mensaje.create(primerMensaje);
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
-    async guardar(mensaje) {
-        try {
-
-            return resultado;
+            return Mensaje.find();
         } catch (error) {
             throw error;
         }
     }
 
-    async devolver() {
+    async buscarPorId(id) {
         try {
+            return Mensaje.findById(id)
+        } catch (error) {
+            throw error;
+        }
+    }
 
-            return mensajes;
+    async guardar(mensaje) {
+        try {
+            return Mensaje.create(mensaje)
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async actualizar(id, mensaje) {
+        try {
+            return Mensaje.findByIdAndUpdate(id, mensaje)
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async borrar(id) {
+        try {
+            return Mensaje.findByIdAndDelete(id);
         } catch (error) {
             throw error;
         }

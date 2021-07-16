@@ -1,13 +1,12 @@
 const express = require('express');
 const productos = require('./api/productos');
+const Mensajes = require('./api/mensajes')
 const handlebars = require('express-handlebars')
 const app = express();
 const http = require('http');
 const server = http.Server(app);
 const io = require('socket.io')(server);
-var knexConfig = require('./dbconfig/sqlite3database');
-var knex = require('knex')(knexConfig);
-const Mensajes = require('./api/mensajes')
+
 
 
 app.use(express.json());
@@ -32,11 +31,57 @@ app.set("views", "./views");
 const routerApi = express.Router()
 
 // USAR ROUTERS
-app.use('/api', routerApi)
+app.use('/api/productos', routerProductos)
+app.use('/api/mensajes', routerMensajes)
 
+//LISTAR MENSAJES
+routerMensajes.get('/leer', async (req, res) => {
+    try {
+        let result = await Mensajes.devolver();
+        return res.json(result);
+    } catch (error) {
+        return res.status(500).send({ error: error.message });
+    }
+});
+
+routerMensajes.get('/leer/:id', async (req, res) => {
+    try {
+        let result = await Mensajes.buscarPorId(req.params.id);
+        return res.json(result);
+    } catch (error) {
+        return res.status(500).send({ error: error.message });
+    }
+});
+
+routerMensajes.post('/messages', async (req, res) => {
+    try {
+        let result = await Mensajes.guardar(req.body);
+        return res.json(result);
+    } catch (error) {
+        return res.status(500).send({ error: error.message });
+    }
+});
+
+routerMensajes.put('/messages/:id', async (req, res) => {
+    try {
+        let result = await Mensajes.actualizar(req.params.id, req.body);
+        return res.json(result);
+    } catch (error) {
+        return res.status(500).send({ error: error.message });
+    }
+});
+
+routerMensajes.delete('/messages/:id', async (req, res) => {
+    try {
+        let result = await Mensajes.borrar(req.params.id);
+        return res.json(result);
+    } catch (error) {
+        return res.status(500).send({ error: error.message });
+    }
+});
 
 // LISTAR PRODUCTOS
-routerApi.get('/productos/listar', (req, res) => {
+routerProductos.get('/productos/listar', (req, res) => {
     productos.listar();
     if (productos.producto.length > 0) {
         res.render('vista', { hayProductos: true, productos: productos.listar() })
@@ -46,18 +91,18 @@ routerApi.get('/productos/listar', (req, res) => {
 })
 
 // LISTAR PRODUCTOS POR ID
-routerApi.get('/productos/listar/:id', (req, res) => {
+routerProductos.get('/productos/listar/:id', (req, res) => {
     let mensajeLista = {};
     if (!productos.producto[req.params.id]) {
         mensajeLista = { error: 'Producto no encontrado' };
     } else {
-        mensajeLista = productos.producto[req.params.id];
+        mensajeLista = productos.listarPorId(req.params.id);
     }
     res.json(mensajeLista)
 })
 
 // GUARDAR PRODUCTO
-routerApi.post('/productos/guardar', (req, res) => {
+routerProductos.post('/productos/guardar', (req, res) => {
     let nuevoProducto = {};
     nuevoProducto.title = req.body.title;
     nuevoProducto.price = req.body.price;
@@ -74,7 +119,7 @@ routerApi.post('/productos/guardar', (req, res) => {
 })
 
 //ACTUALIZAR PRODUCTO POR ID
-routerApi.put('/productos/actualizar/:id', (req, res) => {
+routerProductos.put('/productos/actualizar/:id', (req, res) => {
     let idProducto = req.params.id;
     let nuevoProducto = req.body;
     productos.actualizar(idProducto, nuevoProducto);
@@ -83,7 +128,7 @@ routerApi.put('/productos/actualizar/:id', (req, res) => {
 })
 
 // BORRAR PRODUCTO POR ID
-routerApi.delete('/productos/borrar/:id', (req, res) => {
+routerProductos.delete('/productos/borrar/:id', (req, res) => {
     let idProducto = req.params.id;
     res.json(productos.borrar(idProducto));
 })
