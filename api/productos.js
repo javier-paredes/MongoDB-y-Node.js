@@ -7,7 +7,7 @@ class Productos {
 
     async listar() {
         try {
-            return Producto.find();
+            return Producto.find({});
         } catch (error) {
             throw error;
         }
@@ -15,7 +15,7 @@ class Productos {
 
     async listarPorId(id) {
         try {
-            return Producto.findById();
+            return Producto.findById({ _id: id });
         } catch (error) {
             throw error;
         }
@@ -23,7 +23,8 @@ class Productos {
 
     async guardar(nuevoProducto) {
         try {
-            return Producto.create(nuevoProducto)
+            console.log(nuevoProducto)
+            return Producto.create(nuevoProducto);
         } catch (error) {
             throw error;
         }
@@ -37,7 +38,7 @@ class Productos {
         }
     }
 
-    borrar(idProducto) {
+    async borrar(idProducto) {
         try {
             return Producto.findByIdAndDelete(idProducto);
         } catch (error) {

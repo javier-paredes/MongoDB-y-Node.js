@@ -7,7 +7,8 @@ const http = require('http');
 const server = http.Server(app);
 const io = require('socket.io')(server);
 
-
+//CONECTAR CON MONGOOSE A LA DB DE MONGO
+require('./database/connection');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -28,13 +29,14 @@ app.set("view engine", "hbs");
 app.set("views", "./views");
 
 // CREAR ROUTER
-const routerApi = express.Router()
+const routerProductos = express.Router()
+const routerMensajes = express.Router()
 
 // USAR ROUTERS
 app.use('/api/productos', routerProductos)
 app.use('/api/mensajes', routerMensajes)
 
-//LISTAR MENSAJES
+// LISTAR TODOS LOS MENSAJES
 routerMensajes.get('/leer', async (req, res) => {
     try {
         let result = await Mensajes.devolver();
@@ -44,6 +46,7 @@ routerMensajes.get('/leer', async (req, res) => {
     }
 });
 
+// LISTAR MENSAJES POR ID
 routerMensajes.get('/leer/:id', async (req, res) => {
     try {
         let result = await Mensajes.buscarPorId(req.params.id);
@@ -53,7 +56,8 @@ routerMensajes.get('/leer/:id', async (req, res) => {
     }
 });
 
-routerMensajes.post('/messages', async (req, res) => {
+// GUARDAR MENSAJES EN DB
+routerMensajes.post('/guardar', async (req, res) => {
     try {
         let result = await Mensajes.guardar(req.body);
         return res.json(result);
@@ -62,7 +66,8 @@ routerMensajes.post('/messages', async (req, res) => {
     }
 });
 
-routerMensajes.put('/messages/:id', async (req, res) => {
+// ACTUALIZAR UN MENSAJE
+routerMensajes.put('/actualizar/:id', async (req, res) => {
     try {
         let result = await Mensajes.actualizar(req.params.id, req.body);
         return res.json(result);
@@ -71,7 +76,8 @@ routerMensajes.put('/messages/:id', async (req, res) => {
     }
 });
 
-routerMensajes.delete('/messages/:id', async (req, res) => {
+// BORRAR UN MENSAJE
+routerMensajes.delete('/borrar/:id', async (req, res) => {
     try {
         let result = await Mensajes.borrar(req.params.id);
         return res.json(result);
@@ -81,56 +87,66 @@ routerMensajes.delete('/messages/:id', async (req, res) => {
 });
 
 // LISTAR PRODUCTOS
-routerProductos.get('/productos/listar', (req, res) => {
-    productos.listar();
-    if (productos.producto.length > 0) {
-        res.render('vista', { hayProductos: true, productos: productos.listar() })
-    } else if (productos.producto.length == 0) {
-        res.render('vista', { hayProductos: false })
+routerProductos.get('/listar', async (req, res) => {
+    try {
+        let result = await productos.listar()
+        return res.json(result);
+    } catch (error) {
+        return res.status(500).send({ error: error.message });
     }
+
+    // if (productos.listar().length > 0) {
+    //     res.render('vista', { hayProductos: true, productos: productos.listar() })
+    // } else if (productos.listar().length == 0) {
+    //     res.render('vista', { hayProductos: false })
+    // }
 })
 
 // LISTAR PRODUCTOS POR ID
-routerProductos.get('/productos/listar/:id', (req, res) => {
-    let mensajeLista = {};
-    if (!productos.producto[req.params.id]) {
-        mensajeLista = { error: 'Producto no encontrado' };
-    } else {
-        mensajeLista = productos.listarPorId(req.params.id);
+routerProductos.get('/listar/:id', async (req, res) => {
+
+    try {
+        let mensajeLista = await productos.listarPorId(req.params.id);
+        res.json(mensajeLista)
+    } catch (error) {
+        return res.status(500).send({ error: error.message });
     }
-    res.json(mensajeLista)
 })
 
+
 // GUARDAR PRODUCTO
-routerProductos.post('/productos/guardar', (req, res) => {
-    let nuevoProducto = {};
-    nuevoProducto.title = req.body.title;
-    nuevoProducto.price = req.body.price;
-    nuevoProducto.thumbnail = req.body.thumbnail;
-    nuevoProducto.id = productos.producto.length;
-    productos.guardar(nuevoProducto)
-
-    if (productos.producto.length > 0) {
-        res.render('vista', { hayProductos: true, productos: productos.producto })
-    } else if (productos.producto.length == 0) {
-        res.render('vista', { hayProductos: false })
+routerProductos.post('/guardar', async (req, res) => {
+    try {
+        let nuevoProducto = {};
+        nuevoProducto.title = req.body.title;
+        nuevoProducto.price = req.body.price;
+        nuevoProducto.thumbnail = req.body.thumbnail;
+        await productos.guardar(nuevoProducto)
+        res.json(nuevoProducto)
+    } catch (error) {
+        return res.status(500).send({ error: error.message });
     }
-
+    // if (productos.listar().length > 0) {
+    //     res.render('vista', { hayProductos: true, productos: productos.listar() })
+    // } else if (productos.listar().length == 0) {
+    //     res.render('vista', { hayProductos: false })
+    // }
 })
 
 //ACTUALIZAR PRODUCTO POR ID
-routerProductos.put('/productos/actualizar/:id', (req, res) => {
-    let idProducto = req.params.id;
-    let nuevoProducto = req.body;
-    productos.actualizar(idProducto, nuevoProducto);
-    nuevoProducto.id = productos.producto.indexOf(nuevoProducto);
-    res.json(nuevoProducto);
+routerProductos.put('/actualizar/:id', async (req, res) => {
+    try {
+        let nuevoProducto = await productos.actualizar(req.params.id, req.body);
+        res.json(nuevoProducto);
+    } catch (error) {
+        return res.status(500).send({ error: error.message });
+    }
 })
 
 // BORRAR PRODUCTO POR ID
-routerProductos.delete('/productos/borrar/:id', (req, res) => {
-    let idProducto = req.params.id;
-    res.json(productos.borrar(idProducto));
+routerProductos.delete('/borrar/:id', async (req, res) => {
+    let productoBorrado = await productos.borrar(req.params.id);
+    return res.json(productoBorrado);
 })
 
 // DATOS CHAT
@@ -140,6 +156,7 @@ const messages = [
     { autor: 'Pedro', texto: '¡Muy bien! ¿Y vos?' },
     { autor: 'Ana', texto: '¡Genial!' }
 ];
+
 // SE EJECUTA AL REALIZAR LA PRIMERA CONEXION
 io.on('connection', async socket => {
     console.log('Usuario conectado')
@@ -156,7 +173,7 @@ io.on('connection', async socket => {
         })
     })
     // ACTUALIZAR TABLA
-    socket.emit('actualizar-tabla', productos.producto)
+    socket.emit('actualizar-tabla', productos.listar())
 
     // GUARDAR Y MANDAR MENSAJES QUE LLEGUEN DEL CLIENTE
     socket.on("new-message", function (data) {

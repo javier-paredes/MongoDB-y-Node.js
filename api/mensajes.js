@@ -8,7 +8,7 @@ class Mensajes {
 
     async devolver() {
         try {
-            return Mensaje.find();
+            return Mensaje.find({});
         } catch (error) {
             throw error;
         }
@@ -16,7 +16,7 @@ class Mensajes {
 
     async buscarPorId(id) {
         try {
-            return Mensaje.findById(id)
+            return Mensaje.findById({ _id: id })
         } catch (error) {
             throw error;
         }
